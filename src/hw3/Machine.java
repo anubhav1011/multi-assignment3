@@ -11,6 +11,7 @@ package hw3;
 public class Machine {
     public final String machineName;
     public final Food machineFoodType;
+    public final int capacityIn;
 
     //YOUR CODE GOES HERE...
 
@@ -26,6 +27,7 @@ public class Machine {
     public Machine(String nameIn, Food foodIn, int capacityIn) {
         this.machineName = nameIn;
         this.machineFoodType = foodIn;
+        this.capacityIn = capacityIn;
 
         //YOUR CODE GOES HERE...
 

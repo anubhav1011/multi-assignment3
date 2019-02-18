@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import hw3.Cook;
+import hw3.*;
 
 
 /**
@@ -16,6 +16,13 @@ import hw3.Cook;
 public class Simulation {
     // List to track simulation events during simulation
     public static List<hw3.SimulationEvent> events;
+
+    private static Helper helper;
+
+    public static Helper getHelper() {
+
+        return helper;
+    }
 
 
     /**
@@ -66,13 +73,31 @@ public class Simulation {
                 machineCapacity));
 
 
-        // Set things up you might need
-
+        helper = new Helper(numTables);
 
         // Start up machines
 
+        helper.initMachines(machineCapacity);
+
+
+        // Set things up you might need
+
 
         // Let cooks in
+
+        Thread[] cooks = new Thread[numCooks];
+
+        for (int i = 0; i < cooks.length; i++) {
+
+            cooks[i] = new Thread(new Cook("Cook " + (i + 1)));
+
+        }
+
+
+        for (int i = 0; i < cooks.length; i++) {
+
+            cooks[i].start();
+        }
 
 
         // Build the customers.
@@ -133,7 +158,7 @@ public class Simulation {
             // The easiest way to do this might be the following, where
             // we interrupt their threads.  There are other approaches
             // though, so you can change this if you want to.
-            Thread[] cooks = new Thread[numCooks];
+
 
             for (int i = 0; i < cooks.length; i++)
                 cooks[i].interrupt();
