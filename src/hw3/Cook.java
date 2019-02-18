@@ -9,6 +9,8 @@ package hw3;
 public class Cook implements Runnable {
     private final String name;
 
+    private static Helper h;
+
     /**
      * You can feel free modify this constructor.  It must
      * take at least the name, but may take other parameters
@@ -17,7 +19,8 @@ public class Cook implements Runnable {
      * @param: the name of the cook
      */
     public Cook(String name) {
-        this.name = name;
+        this.name = name;;
+        this.h = Simulation.getHelper();
     }
 
     public String toString() {
@@ -39,6 +42,26 @@ public class Cook implements Runnable {
     public void run() {
 
         Simulation.logEvent(SimulationEvent.cookStarting(this));
+
+        synchronized (h.getOrders()){
+
+            while (h.getOrders().isEmpty()){
+
+                try {
+                    h.getOrders().wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+
+        }
+
+
+
+
+
 //        try {
 //            while (true) {
 //                //YOUR CODE GOES HERE...

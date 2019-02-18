@@ -12,6 +12,8 @@ public class Helper {
 
     private List<Cook> cooks;
 
+    private List<Order> orders;
+
     private int numOfTables;
 
     private static Helper helper;
@@ -20,6 +22,7 @@ public class Helper {
     public Helper(int numOfTables) {
 
         this.activeCustomers = new ArrayList<>();
+        this.orders = new ArrayList<>();
         this.numOfTables = numOfTables;
 
 
@@ -34,4 +37,15 @@ public class Helper {
 
     }
 
+    public List<Customer> getActiveCustomers() {
+        return activeCustomers;
+    }
+
+    public int getNumOfTables() {
+        return numOfTables;
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
 }
