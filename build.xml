@@ -1,4 +1,4 @@
- <project name="Assignment3" basedir="." default="main">
+<project name="Assignment3" basedir="." default="main">
 
     <property name="src.dir" value="src/hw3"/>
 
@@ -43,20 +43,20 @@
 
     <target name="clean-build" depends="clean,jar"/>
 
-    <target name="junit" depends="jar">
-        <junit printsummary="yes">
-            <classpath>
-                <path refid="classpath"/>
-                <path refid="application"/>
-            </classpath>
+    <!--<target name="junit" depends="jar">-->
+    <!--<junit printsummary="yes">-->
+    <!--<classpath>-->
+    <!--<path refid="classpath"/>-->
+    <!--<path refid="application"/>-->
+    <!--</classpath>-->
 
-            <formatter type="brief" usefile="false"/>
+    <!--<formatter type="brief" usefile="false"/>-->
 
-            <batchtest fork="yes">
-                <fileset dir="${classes.dir}" includes="**/*Test.class"/>
-            </batchtest>
-        </junit>
-    </target>
+    <!--<batchtest fork="yes">-->
+    <!--<fileset dir="${classes.dir}" includes="**/*Test.class"/>-->
+    <!--</batchtest>-->
+    <!--</junit>-->
+    <!--</target>-->
 
     <!--<target name="junitreport">-->
     <!--<junitreport todir="${report.dir}">-->
@@ -65,7 +65,7 @@
     <!--</junitreport>-->
     <!--</target>-->
 
-    <target name="main" depends="clean,run,junit"/>
+    <target name="main" depends="clean,run"/>
 
 
 </project>

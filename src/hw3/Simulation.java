@@ -17,9 +17,11 @@ public class Simulation {
     // List to track simulation events during simulation
     public static List<hw3.SimulationEvent> events;
 
-    private static Helper helper;
+    private static volatile Helper helper;
 
-    public static Helper getHelper() {
+    private static final Random random = new Random();
+
+    public static synchronized Helper getHelper() {
 
         return helper;
     }
@@ -109,10 +111,13 @@ public class Simulation {
             order.add(hw3.FoodType.fries);
             order.add(hw3.FoodType.fries);
             order.add(hw3.FoodType.coffee);
+
+            int priority = random.nextInt(3) + 1;
+            Order.Priority priorityEnum = Order.Priority.getValue(priority);
             for (int i = 0; i < customers.length; i++) {
                 customers[i] = new Thread(
-                        new hw3.Customer("Customer " + (i + 1), order)
-                );
+                        new hw3.Customer("Customer " + (i + 1), order, priorityEnum));
+
             }
         } else {
             for (int i = 0; i < customers.length; i++) {
@@ -121,6 +126,8 @@ public class Simulation {
                 int friesCount = rnd.nextInt(3);
                 int coffeeCount = rnd.nextInt(3);
                 order = new LinkedList<hw3.Food>();
+                int priority = random.nextInt(3) + 1;
+                Order.Priority priorityEnum = Order.Priority.getValue(priority);
                 for (int b = 0; b < burgerCount; b++) {
                     order.add(hw3.FoodType.burger);
                 }
@@ -131,7 +138,7 @@ public class Simulation {
                     order.add(hw3.FoodType.coffee);
                 }
                 customers[i] = new Thread(
-                        new hw3.Customer("Customer " + (i + 1), order)
+                        new hw3.Customer("Customer " + (i + 1), order, priorityEnum)
                 );
             }
         }
@@ -154,6 +161,14 @@ public class Simulation {
             //   -- you need to add some code here...
 
 
+            for (int i = 0; i < customers.length; i++) {
+                customers[i].join();
+                //NOTE: Starting the customer does NOT mean they get to go
+                //      right into the shop.  There has to be a table for
+                //      them.  The Customer class' run method has many jobs
+                //      to do - one of these is waiting for an available
+                //      table...
+            }
             // Then send cooks home...
             // The easiest way to do this might be the following, where
             // we interrupt their threads.  There are other approaches
@@ -170,6 +185,13 @@ public class Simulation {
         }
 
         // Shut down machines
+
+
+        for (Machine machine : helper.getMachines()) {
+
+            logEvent(SimulationEvent.machineEnding(machine));
+
+        }
 
 
         // Done with simulation
@@ -200,8 +222,8 @@ public class Simulation {
 		int machineCapacity = new Integer(args[3]).intValue();
 		boolean randomOrders = new Boolean(args[4]);
 		 */
-        int numCustomers = 10;
-        int numCooks = 1;
+        int numCustomers = 20;
+        int numCooks = 6;
         int numTables = 5;
         int machineCapacity = 4;
         boolean randomOrders = false;

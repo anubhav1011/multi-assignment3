@@ -3,6 +3,7 @@ package hw3;
 import java.util.List;
 
 import hw3.Order;
+import hw3.Order.Priority;
 
 /**
  * Customers are simulation actors that have two fields: a name, and a list
@@ -19,20 +20,20 @@ public class Customer implements Runnable {
 
     private final Order order;
 
-    private static Helper h;
+    private volatile Helper h;
 
 
-    private static int runningCounter = 0;
+    private volatile static int runningCounter = 0;
 
     /**
      * You can feel free modify this constructor.  It must take at
      * least the name and order but may take other parameters if you
      * would find adding them useful.
      */
-    public Customer(String name, List<Food> items) {
+    public Customer(String name, List<Food> items, Priority priority) {
         this.name = name;
-        this.order = new Order(items, 1);
         this.orderNum = ++runningCounter;
+        this.order = new Order(items, priority, this.orderNum);
         this.h = Simulation.getHelper();
     }
 
@@ -57,14 +58,16 @@ public class Customer implements Runnable {
             while (h.getActiveCustomers().size() == h.getNumOfTables()) {
 
                 try {
+                    System.out.println("Customer " + this + " Waiting to enter");
                     h.getActiveCustomers().wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
 
-            h.getActiveCustomers().add(this);
             Simulation.logEvent(SimulationEvent.customerEnteredCoffeeShop(this));
+            System.out.println("Customer " + this + " Added");
+            h.getActiveCustomers().add(this);
             h.getActiveCustomers().notifyAll();
 
         }
@@ -83,13 +86,28 @@ public class Customer implements Runnable {
         synchronized (this.order) {
             while (this.order.getOrderStatus() != Order.OrderStatus.DONE) {
                 try {
+                    System.out.println("Customer " + this + " waiting for his order");
                     this.order.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+
+            Simulation.logEvent(SimulationEvent.customerReceivedOrder(this, this.order.getItems(), this.order.getOrderNum()));
+        }
+
+        synchronized (h.getActiveCustomers()) {
+
+            h.getActiveCustomers().remove(this);
+
+            Simulation.logEvent(SimulationEvent.customerLeavingCoffeeShop(this));
+            h.getActiveCustomers().notifyAll();
         }
 
 
+    }
+
+    public Order getOrder() {
+        return order;
     }
 }

@@ -16,7 +16,7 @@ public class Helper {
 
     private int numOfTables;
 
-    private static Helper helper;
+    //private static Helper helper;
 
 
     public Helper(int numOfTables) {
@@ -24,6 +24,7 @@ public class Helper {
         this.activeCustomers = new ArrayList<>();
         this.orders = new ArrayList<>();
         this.numOfTables = numOfTables;
+        this.machines = new ArrayList<>();
 
 
     }
@@ -37,6 +38,14 @@ public class Helper {
 
     }
 
+    public Machine findMAchineforFood(Food foodName) {
+
+
+        return this.machines.stream()
+                .filter(machine -> machine.machineFoodType.equals(foodName))
+                .findAny().orElse(null);
+    }
+
     public List<Customer> getActiveCustomers() {
         return activeCustomers;
     }
@@ -47,5 +56,9 @@ public class Helper {
 
     public List<Order> getOrders() {
         return orders;
+    }
+
+    public List<Machine> getMachines() {
+        return machines;
     }
 }

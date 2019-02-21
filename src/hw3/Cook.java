@@ -1,6 +1,10 @@
 package hw3;
 
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * Cooks are simulation actors that have at least one field, a name.
  * When running, a cook attempts to retrieve outstanding orders placed
@@ -9,7 +13,7 @@ package hw3;
 public class Cook implements Runnable {
     private final String name;
 
-    private static Helper h;
+    private volatile Helper h;
 
     /**
      * You can feel free modify this constructor.  It must
@@ -19,7 +23,7 @@ public class Cook implements Runnable {
      * @param: the name of the cook
      */
     public Cook(String name) {
-        this.name = name;;
+        this.name = name;
         this.h = Simulation.getHelper();
     }
 
@@ -43,36 +47,138 @@ public class Cook implements Runnable {
 
         Simulation.logEvent(SimulationEvent.cookStarting(this));
 
-        synchronized (h.getOrders()){
+        try {
+            while (true) {
 
-            while (h.getOrders().isEmpty()){
+                Order orderToCook = null;
 
-                try {
-                    h.getOrders().wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                synchronized (h.getOrders()) {
+
+                    // List<Order> allOrders = h.getOrders();
+
+
+                    while (getPlacedOrders(h.getOrders()).isEmpty()) {
+
+                        System.out.println("Cook " + this + " waiting");
+
+                        h.getOrders().wait();
+
+//                        try {
+//                            allOrders.wait();
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+                    }
+
+                    List<Order> newOrders = getPlacedOrders(h.getOrders());
+                    System.out.println("New Orders Size " + newOrders.size() + " for " + this);
+
+
+                    if (newOrders.size() > 1) {
+
+                        System.out.println("More than one orders in cooks hand");
+                        orderToCook = getOrdersByPriority(newOrders);
+
+                    } else {
+                        orderToCook = newOrders.get(0);
+                    }
+
+                    orderToCook.setOrderStatus(Order.OrderStatus.INPROGRESS);
+
+                    h.getOrders().notifyAll();
+
+
                 }
+
+
+                // synchronized (orderToCook) {
+
+                Simulation.logEvent(SimulationEvent.cookReceivedOrder(this, orderToCook.getItems(), orderToCook.getOrderNum()));
+
+                List<Food> items = orderToCook.getItems();
+
+                for (Map.Entry<String, Long> stringLongEntry : orderToCook.getFoodCount().entrySet()) {
+
+                    String foodName = stringLongEntry.getKey();
+
+                    Food food = items.stream().filter(f -> f.getName().equals(foodName)).findAny().orElse(null);
+
+                    Machine machine = h.findMAchineforFood(food);
+                    machine.makeFood(stringLongEntry.getValue().intValue(), orderToCook, food);
+                    Simulation.logEvent(SimulationEvent.cookStartedFood(this, food, orderToCook.getOrderNum()));
+
+
+                }
+
+
+                synchronized (orderToCook) {
+
+                    while (!(orderToCook.getNoOfItemsRemaining() == 0)) {
+
+                        System.out.println("Cook waiting for order " + orderToCook.getOrderNum() + " to cook");
+
+                        orderToCook.wait();
+                    }
+
+                    Simulation.logEvent(SimulationEvent.cookFinishedFood(this, null, orderToCook.getOrderNum()));
+
+
+                    synchronized (h.getOrders()) {
+
+
+                        Simulation.logEvent(SimulationEvent.cookCompletedOrder(this, orderToCook.getOrderNum()));
+
+                        orderToCook.setOrderStatus(Order.OrderStatus.DONE);
+                        h.getOrders().remove(orderToCook);
+                        orderToCook.notify();
+                        h.getOrders().notifyAll();
+
+                    }
+
+                    //}
+
+                }
+
             }
-
-
-
-        }
-
-
-
-
-
-//        try {
-//            while (true) {
-//                //YOUR CODE GOES HERE...
-//
-//            }
-//        } catch (InterruptedException e) {
+        } catch (InterruptedException e) {
 //            // This code assumes the provided code in the Simulation class
 //            // that interrupts each cook thread when all customers are done.
 //            // You might need to change this if you change how things are
 //            // done in the Simulation class.
-//            Simulation.logEvent(SimulationEvent.cookEnding(this));
-//        }
+            Simulation.logEvent(SimulationEvent.cookEnding(this));
+        }
+
     }
+
+
+    private Order getOrdersByPriority(List<Order> orders) {
+
+        synchronized (orders) {
+
+            List<Order> sortedByPriority = orders.stream()
+                    .filter(o -> o.getOrderStatus().equals(Order.OrderStatus.PLACED))
+                    .sorted((o1, o2) -> {
+
+                        Integer priorityO1 = o1.getPriority().getPriorityValue();
+                        Integer priorityO2 = o2.getPriority().getPriorityValue();
+
+                        return priorityO1.compareTo(priorityO2);
+
+
+                    }).collect(Collectors.toList());
+
+            return sortedByPriority.get(0);
+
+        }
+
+
+    }
+
+    private List<Order> getPlacedOrders(List<Order> order) {
+
+
+        return order.stream().filter(o -> o.getOrderStatus().equals(Order.OrderStatus.PLACED)).collect(Collectors.toList());
+    }
+
+
 }

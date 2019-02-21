@@ -1,5 +1,7 @@
 package hw3;
 
+import java.util.List;
+
 /**
  * A Machine is used to make a particular Food.  Each Machine makes
  * just one kind of Food.  Each machine has a capacity: it can make
@@ -12,6 +14,9 @@ public class Machine {
     public final String machineName;
     public final Food machineFoodType;
     public final int capacityIn;
+    private Integer currentFoodCount;
+
+    private volatile Object machineCapacityLock = null;
 
     //YOUR CODE GOES HERE...
 
@@ -28,6 +33,10 @@ public class Machine {
         this.machineName = nameIn;
         this.machineFoodType = foodIn;
         this.capacityIn = capacityIn;
+        this.currentFoodCount = 0;
+        this.machineCapacityLock = new Object();
+
+        Simulation.logEvent(SimulationEvent.machineStarting(this, foodIn, capacityIn));
 
         //YOUR CODE GOES HERE...
 
@@ -43,18 +52,107 @@ public class Machine {
      * the call can proceed.  You will need to implement some means to
      * notify the calling Cook when the food item is finished.
      */
-    public Object makeFood() throws InterruptedException {
+    public void makeFood(int numberOfItems, Order order, Food food) throws InterruptedException {
+
         //YOUR CODE GOES HERE...
 
-        return new Object();
+
+        synchronized (machineCapacityLock) {
+
+            while (currentFoodCount + numberOfItems > capacityIn) {
+
+                System.out.println("Machine " + this.machineName + " on maximum capacity");
+                machineCapacityLock.wait();
+            }
+
+            currentFoodCount += numberOfItems;
+
+            Thread[] cookItems = new Thread[numberOfItems];
+
+            for (int i = 0; i < numberOfItems; i++) {
+
+                CookAnItem cookAnItem = new CookAnItem(this.machineFoodType.cookTimeMS, this.currentFoodCount, order, food);
+                cookItems[i] = new Thread(cookAnItem);
+
+
+            }
+
+            for (int i = 0; i < numberOfItems; i++) {
+
+                cookItems[i].start();
+            }
+            machineCapacityLock.notifyAll();
+
+        }
+
+
     }
 
     //THIS MIGHT BE A USEFUL METHOD TO HAVE AND USE BUT IS JUST ONE IDEA
     private class CookAnItem implements Runnable {
+
+        public CookAnItem(int sleepTime, Integer currentFoodCount, Order order, Food food) {
+
+            this.sleepTime = sleepTime;
+            this.order = order;
+            this.currentFoodCount = currentFoodCount;
+            this.food = food;
+
+        }
+
+        private final int sleepTime;
+        public boolean itemCooked = false;
+        private Integer currentFoodCount;
+        private Order order;
+        private Food food;
+
+
         public void run() {
-//			try {
-//				//YOUR CODE GOES HERE...
-//			} catch(InterruptedException e) { }
+
+
+            try {
+
+                Simulation.logEvent(SimulationEvent.machineCookingFood(Machine.this, this.food));
+                Thread.sleep(sleepTime);
+                synchronized (order) {
+
+                    synchronized (Machine.this.machineCapacityLock) {
+
+                        order.setNoOfItemsRemaining(order.getNoOfItemsRemaining() - 1);
+                        Machine.this.currentFoodCount--;
+
+                        System.out.println("Machine " + Machine.this + " current food count is " + Machine.this.currentFoodCount);
+                        Simulation.logEvent(SimulationEvent.machineDoneFood(Machine.this, food, order.getOrderNum()));
+                        Machine.this.machineCapacityLock.notifyAll();
+                        order.notifyAll();
+
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+//            try {
+//
+//                synchronized (this) {
+//
+//                    Thread.sleep(sleepTime);
+//                    itemCooked = true;
+//
+//                    synchronized (Machine.this.currentFoodCount) {
+//                        Machine.this.currentFoodCount--;
+//
+//                    }
+//                    this.notify();
+//
+//                }
+//
+//
+//            } catch (InterruptedException e) {
+//
+//
+//            }
         }
     }
 
