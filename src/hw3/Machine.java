@@ -112,7 +112,7 @@ public class Machine {
 
             try {
 
-                Simulation.logEvent(SimulationEvent.machineCookingFood(Machine.this, this.food));
+                Simulation.logEvent(SimulationEvent.machineCookingFood(Machine.this, this.food, order.getOrderNum()));
                 Thread.sleep(sleepTime);
                 synchronized (order) {
 

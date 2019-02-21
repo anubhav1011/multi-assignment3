@@ -20,10 +20,10 @@ public class Customer implements Runnable {
 
     private final Order order;
 
-    private volatile Helper h;
+    private Helper h;
 
 
-    private volatile static int runningCounter = 0;
+    private static int runningCounter = 0;
 
     /**
      * You can feel free modify this constructor.  It must take at
@@ -58,7 +58,7 @@ public class Customer implements Runnable {
             while (h.getActiveCustomers().size() == h.getNumOfTables()) {
 
                 try {
-                    System.out.println("Customer " + this + " Waiting to enter");
+                    //System.out.println("Customer " + this + " Waiting to enter");
                     h.getActiveCustomers().wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -86,7 +86,7 @@ public class Customer implements Runnable {
         synchronized (this.order) {
             while (this.order.getOrderStatus() != Order.OrderStatus.DONE) {
                 try {
-                    System.out.println("Customer " + this + " waiting for his order");
+                    //System.out.println("Customer " + this + " waiting for his order");
                     this.order.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();

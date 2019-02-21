@@ -17,11 +17,11 @@ public class Simulation {
     // List to track simulation events during simulation
     public static List<hw3.SimulationEvent> events;
 
-    private static volatile Helper helper;
+    private static Helper helper;
 
     private static final Random random = new Random();
 
-    public static synchronized Helper getHelper() {
+    public static Helper getHelper() {
 
         return helper;
     }
@@ -222,10 +222,10 @@ public class Simulation {
 		int machineCapacity = new Integer(args[3]).intValue();
 		boolean randomOrders = new Boolean(args[4]);
 		 */
-        int numCustomers = 20;
-        int numCooks = 6;
+        int numCustomers = 10;
+        int numCooks = 3;
         int numTables = 5;
-        int machineCapacity = 4;
+        int machineCapacity = 2;
         boolean randomOrders = false;
 
 

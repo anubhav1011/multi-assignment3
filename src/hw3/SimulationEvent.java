@@ -194,12 +194,12 @@ public class SimulationEvent {
     }
 
     public static SimulationEvent machineCookingFood(Machine machine,
-                                                     Food food) {
+                                                     Food food, int orderNumber) {
         return new SimulationEvent(EventType.MachineStartingFood,
                 null, null,
                 machine,
                 food,
-                null, 0, null);
+                null, orderNumber, null);
     }
 
     public static SimulationEvent machineDoneFood(Machine machine,

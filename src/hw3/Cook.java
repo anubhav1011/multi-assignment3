@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class Cook implements Runnable {
     private final String name;
 
-    private volatile Helper h;
+    private Helper h;
 
     /**
      * You can feel free modify this constructor.  It must
@@ -59,7 +59,7 @@ public class Cook implements Runnable {
 
                     while (getPlacedOrders(h.getOrders()).isEmpty()) {
 
-                        System.out.println("Cook " + this + " waiting");
+                        // System.out.println("Cook " + this + " waiting");
 
                         h.getOrders().wait();
 
@@ -115,12 +115,17 @@ public class Cook implements Runnable {
 
                     while (!(orderToCook.getNoOfItemsRemaining() == 0)) {
 
-                        System.out.println("Cook waiting for order " + orderToCook.getOrderNum() + " to cook");
+                        //System.out.println("Cook waiting for order " + orderToCook.getOrderNum() + " to cook");
 
                         orderToCook.wait();
                     }
 
-                    Simulation.logEvent(SimulationEvent.cookFinishedFood(this, null, orderToCook.getOrderNum()));
+                    for (Food item : items) {
+
+                        Simulation.logEvent(SimulationEvent.cookFinishedFood(this, item, orderToCook.getOrderNum()));
+
+
+                    }
 
 
                     synchronized (h.getOrders()) {
